@@ -1,7 +1,6 @@
 from infrastructure.sql.connect import create_connection, create_tables
 from persistent.db.users import User
 from sqlalchemy import select, insert
-from utils.security.pswd_hash import create_hash_pswd
 
 
 class UserRepository:
@@ -9,19 +8,17 @@ class UserRepository:
         self.sessionmaker = create_connection()
         create_tables()
     
-    async def put_user(self, tgid:str, nick:str, email:str, pswd:str) -> None:
-        hash_pswd = create_hash_pswd(pswd)
+    async def put_user(self, tgid:str, nick:str, email:str, uniq_salt:str) -> None:
 
-        stmp = insert(User).values({"tgid":tgid, "email":email, "nick":nick, "active": "True", "password":hash_pswd})
+        stmp = insert(User).values({"tgid":tgid, "email":email, "nick":nick, "active": "True", "salt":uniq_salt})
         
         async with self.sessionmaker() as session:
             await session.execute(stmp)
             await session.commit()
     
-    async def get_user(self, email:str, pswd:str):
-        hash_pswd = create_hash_pswd(pswd)
+    async def get_user(self, tg_id: str):
         
-        stmp = select(User.tgid).where(User.password == hash_pswd, User.email == email).limit(1)
+        stmp = select(User.nick).where(User.tgid == tg_id).limit(1)
             
         async with self.sessionmaker() as session:
             resp = await session.execute(stmp)
