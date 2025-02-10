@@ -1,12 +1,13 @@
 from .base import Base
-from sqlalchemy import Column, Text
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import TEXT
 
 
 class User(Base):
     __tablename__ = "users"
     
-    tgid = Column(Text, primary_key = True)
-    nick = Column(Text, nullable = False)
-    email = Column(Text, nullable = False)
-    password = Column(Text, nullable = False)
-    active = Column(Text, default = "False")
+    tgid = Column(TEXT, primary_key = True)
+    nick = Column(TEXT, nullable = False)
+    email = Column(TEXT, nullable = False)
+    password = Column(TEXT, nullable = False)
+    active = Column(TEXT, default = "False")
