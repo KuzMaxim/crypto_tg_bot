@@ -14,22 +14,15 @@ class Register(StatesGroup):
     tg_id = State()
     email_reg = State()
     check_email = State()
-    finish_reg = State()
-    waiting = State()
-    confirmed = State()
+    active = State()
     reg_started = State()
+    waiting = State()
     
-class User(StatesGroup):
-    admin = State()
-    authorised = State()
-    unauthorised = State()
     
-
 router = Router()
 bot_user_service = UserService()
-number_for_confirming = ""
 
-@router.message(F.text.upper().in_({"ГЛАВНАЯ", "MAIN", "/START", "МЕНЮ"}))
+@router.message(F.text.upper().in_({"ГЛАВНАЯ", "MAIN", "МЕНЮ", "/START"}))
 async def cmd_start(message: Message):
     await message.answer(
 """Привет, я создан для помощи в ведении твоего криптокошелька.
@@ -42,18 +35,23 @@ async def cmd_start(message: Message):
                          )
 
     
+
     
 @router.message(Command('help'))
 async def cmd_help(message: Message):
     await message.answer("Так, тебе нужна помощь! Я этот раздел пока не сделал, так что попробуй, пожалуйста, разобраться самостоятельно")
 
      
-@router.message(F.text.upper() == "РЕГИСТРАЦИЯ")
+@router.message(F.text.upper().in_({"РЕГИСТРАЦИЯ", "ЗАРЕГИСТРИРОВАТЬСЯ", "/REGISTER", "REGISTER"}))
 async def register(message:Message, state: FSMContext):
-    print(await state.get_state())
-    await state.set_state(Register.nick)
-    await state.update_data(tg_id  = message.from_user.id)
-    await message.answer("Как мне к тебе обращаться?")
+    data = await state.get_data()
+    try:
+        if data["active"] == "True":
+            await message.answer("Вы уже зарегистрированы")
+    except Exception:     
+        await state.set_state(Register.nick)
+        await state.update_data(tg_id  = str(message.from_user.id))
+        await message.answer("Как мне к тебе обращаться?")
 
 
 @router.message(Register.nick)
@@ -72,8 +70,8 @@ async def reg_password(message: Message, state: FSMContext):
     await state.update_data(reg_email = message.text)
     data = await state.get_data()
     gen_salt = generate_salt()
-    await bot_user_service.put_user(email = data["reg_email"], nick = data["nick"], tgid = data["tg_id"], salt = gen_salt)
-    if str(await send_email(getter = message.text, tg_id = data["tg_id"])) == "Message was not sent":
+    await bot_user_service.put_user(email = data["reg_email"], nick = data["nick"], tg_id = data["tg_id"], salt = gen_salt)
+    if str(await send_email(getter = message.text, salt = gen_salt)) == "Message was not sent":
         await message.answer("Сообщение не получилось отправить")
         await state.clear()
     else:
@@ -82,9 +80,13 @@ async def reg_password(message: Message, state: FSMContext):
     
 
 @router.message(Register.waiting)
-async def confirming_email(message:Message, state: FSMContext):
-    if message.text ==  number_for_confirming:
-        await message.answer(f"Регистрация прошла успешно")
+async def start_function(message:Message, state:FSMContext):
+    data = await state.get_data()
+    salt = message.text
+    if salt == await bot_user_service.get_salt(tg_id = data["tg_id"]):
+        await bot_user_service.activate_user(tg_id = data["tg_id"])
+        await state.update_data(active = "True")
+        await message.answer("Вы успешно зарегистрированы и ваш аккаунт активирован! 🎉")
     else:
-        await message.answer("Введенное число не совпало с отправленным(. Но ты всегда можешь начать процесс ргеистрации заново!")
+        await message.answer("Что-то пошло не так, но вы можете начать регистрацию заново")
     await state.clear()

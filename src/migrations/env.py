@@ -1,6 +1,7 @@
 from logging.config import fileConfig
 
 import os
+from infrastructure.sql.connect import settings
 from dotenv import load_dotenv#type:ignore
 
 from persistent.db.users import User
@@ -72,7 +73,7 @@ def run_migrations_online() -> None:
             context.run_migrations()
 
 
-config.set_main_option("sqlalchemy.url", f"postgresql+asyncpg://{os.getenv("DB_USER")}:{os.getenv("DB_PASS")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}" + "?async_fallback=True")
+config.set_main_option("sqlalchemy.url", f"postgresql+asyncpg://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}" + "?async_fallback=True")
 
 
 if context.is_offline_mode():

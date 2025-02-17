@@ -9,5 +9,5 @@ class User(Base):
     tgid = Column(TEXT, primary_key = True)
     nick = Column(TEXT, nullable = False)
     email = Column(TEXT, nullable = False)
-    password = Column(TEXT, nullable = False)
+    salt = Column(TEXT, nullable = False, default = ("0" * 16))
     active = Column(TEXT, default = "False")
