@@ -5,7 +5,7 @@ import os
 
 load_dotenv()
 
-api = CoinMarketAPI(base_url = "https://pro-api.coinmarketcap.com", api_key = os.getenv("CRYPTO_API_KEY"))
+api = CoinMarketAPI()
 
 
 class CryptoService:

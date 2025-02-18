@@ -9,6 +9,7 @@ from presentations.telegram_bot.keyboards import *
 from utils.security.salt import generate_salt
 import asyncio
 from services.crypto_service import CryptoService
+from services.top_crypto_service import TopCryptoService 
 
 class Register(StatesGroup):
     nick = State()
@@ -24,6 +25,8 @@ class CoinPrice(StatesGroup):
 crypto_service = CryptoService()
 router = Router()
 bot_user_service = UserService()
+top_crypto_sesrvice = TopCryptoService()
+
 
 @router.message(F.text.upper().in_({"ГЛАВНАЯ", "MAIN", "МЕНЮ", "/START"}))
 async def cmd_start(message: Message):
@@ -41,7 +44,8 @@ async def cmd_start(message: Message):
 
 @router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
 async def check_wallet(message: Message):
-    ...
+    top_crypto_sesrvice.add_crypto("FIRST FUNC", "STILL 1ST")
+    top_crypto_sesrvice.get_crypto("FIRST FUNC")
     
 @router.message(F.text.upper() == "ЦЕНА КОНКРЕТНОЙ КРИПТОВАЛЮТЫ")
 async def get_price_specific_crypto_ticker(message: Message, state: FSMContext):
