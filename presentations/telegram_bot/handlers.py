@@ -7,7 +7,8 @@ from services.user_service import UserService
 from utils.email.confirming_email import send_email
 from presentations.telegram_bot.keyboards import *
 from utils.security.salt import generate_salt
-
+import asyncio
+from services.crypto_service import CryptoService
 
 class Register(StatesGroup):
     nick = State()
@@ -17,8 +18,10 @@ class Register(StatesGroup):
     active = State()
     reg_started = State()
     waiting = State()
-    
-    
+
+class CoinPrice(StatesGroup):
+    ticker = State()
+crypto_service = CryptoService()
 router = Router()
 bot_user_service = UserService()
 
@@ -36,29 +39,48 @@ async def cmd_start(message: Message):
 
     
 
+@router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
+async def check_wallet(message: Message):
+    ...
+    
+@router.message(F.text.upper() == "ЦЕНА КОНКРЕТНОЙ КРИПТОВАЛЮТЫ")
+async def get_price_specific_crypto_ticker(message: Message, state: FSMContext):
+    await state.set_state(CoinPrice.ticker)
+    await message.answer("Напишите тикер(сокращенное название) нужной вам криптовалюты(например, BTC)")
+    
+
+@router.message(CoinPrice.ticker)
+async def get_price_specific_crypto(message: Message, state: FSMContext):
+    await message.answer(await crypto_service.get_specific_crypto(ticker = message.text) + "$ (USD)")
+    await state.clear()
+    
+    
     
 @router.message(Command('help'))
 async def cmd_help(message: Message):
-    await message.answer("Так, тебе нужна помощь! Я этот раздел пока не сделал, так что попробуй, пожалуйста, разобраться самостоятельно")
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(message.answer("Так, тебе нужна помощь! Я этот раздел пока не сделал, так что попробуй, пожалуйста, разобраться самостоятельно"))
 
      
 @router.message(F.text.upper().in_({"РЕГИСТРАЦИЯ", "ЗАРЕГИСТРИРОВАТЬСЯ", "/REGISTER", "REGISTER"}))
 async def register(message:Message, state: FSMContext):
-    data = await state.get_data()
-    try:
-        if data["active"] == "True":
-            await message.answer("Вы уже зарегистрированы")
-    except Exception:     
-        await state.set_state(Register.nick)
-        await state.update_data(tg_id  = str(message.from_user.id))
-        await message.answer("Как мне к тебе обращаться?")
+    async with asyncio.TaskGroup() as tg:
+        data = await state.get_data()
+        try:
+            if data["active"] == "True":
+                tg.create_task(message.answer("Вы уже зарегистрированы"))
+        except Exception:     
+            tg.create_task(state.set_state(Register.nick))
+            tg.create_task(state.update_data(tg_id  = str(message.from_user.id)))
+            await message.answer("Как мне к тебе обращаться?")
 
 
 @router.message(Register.nick)
 async def reg_email(message: Message, state: FSMContext):
-    await state.update_data(nick = message.text)
-    await state.set_state(Register.email_reg)
-    await message.answer(
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(state.update_data(nick = message.text))
+        tg.create_task(state.set_state(Register.email_reg))
+        await message.answer(
 """Удобная тебе действительная почта
 Образец: my_email@gmail.com"""
     )
@@ -67,26 +89,28 @@ async def reg_email(message: Message, state: FSMContext):
 
 @router.message(Register.email_reg)
 async def reg_password(message: Message, state: FSMContext):
-    await state.update_data(reg_email = message.text)
-    data = await state.get_data()
-    gen_salt = generate_salt()
-    await bot_user_service.put_user(email = data["reg_email"], nick = data["nick"], tg_id = data["tg_id"], salt = gen_salt)
-    if str(await send_email(getter = message.text, salt = gen_salt)) == "Message was not sent":
-        await message.answer("Сообщение не получилось отправить")
-        await state.clear()
-    else:
-        await message.answer("Перейди по ссылке, отправленной на указанную почту")
-        await state.set_state(Register.waiting)
+    async with asyncio.TaskGroup() as tg:
+        await state.update_data(reg_email = message.text)
+        data = await state.get_data()
+        gen_salt = generate_salt()
+        await bot_user_service.put_user(email = data["reg_email"], nick = data["nick"], tg_id = data["tg_id"], salt = gen_salt)
+        if str(await tg.create_task(send_email(getter = message.text, salt = gen_salt))) == "Message was not sent":
+            await message.answer("Сообщение не получилось отправить")
+            tg.create_task(state.clear())
+        else:
+            await message.answer("Перейди по ссылке, отправленной на указанную почту")
+            tg.create_task(state.set_state(Register.waiting))
     
 
 @router.message(Register.waiting)
 async def start_function(message:Message, state:FSMContext):
-    data = await state.get_data()
-    salt = message.text
-    if salt == await bot_user_service.get_salt(tg_id = data["tg_id"]):
-        await bot_user_service.activate_user(tg_id = data["tg_id"])
-        await state.update_data(active = "True")
-        await message.answer("Вы успешно зарегистрированы и ваш аккаунт активирован! 🎉")
-    else:
-        await message.answer("Что-то пошло не так, но вы можете начать регистрацию заново")
-    await state.clear()
+    async with asyncio.TaskGroup() as tg:
+        data = await state.get_data()
+        salt = message.text
+        if salt == await bot_user_service.get_salt(tg_id = data["tg_id"]):
+            tg.create_task(bot_user_service.activate_user(tg_id = data["tg_id"]))
+            tg.create_task(state.update_data(active = "True"))
+            await message.answer("Вы успешно зарегистрированы и ваш аккаунт активирован! 🎉")
+        else:
+            await message.answer("Что-то пошло не так, но вы можете начать регистрацию заново")
+        tg.create_task(state.clear())

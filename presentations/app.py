@@ -1,6 +1,6 @@
 import fastapi
 from services.user_service import UserService
-from services.crypto_service import crypto_service
+from services.crypto_service import CryptoService
 import asyncio
 
 

@@ -1,9 +1,10 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 start_reply_keyboard = ReplyKeyboardMarkup(keyboard = [
+    [KeyboardButton(text = "Цена конкретной криптовалюты")],
+    [KeyboardButton(text = "Мой кошелек"), 
+    KeyboardButton(text = "Актуальный курс")],
     [KeyboardButton(text = "Регистрация")],
-    [KeyboardButton(text = "Войти"), KeyboardButton(text = "Забыли пароль?")], 
-    [KeyboardButton(text = "Посмотреть список криптовалют")],
     ], resize_keyboard= True, input_field_placeholder="Выберите необходимую вам функцию")
 
 
