@@ -1,12 +1,13 @@
 import aiohttp
 from dotenv import load_dotenv#type: ignore
+import asyncio
 import os
 
 load_dotenv()
 
 class CoinMarketAPI:
     def __init__(self):
-        self.base_url = os.getenv("https://pro-api.coinmarketcap.com")
+        self.base_url = "https://pro-api.coinmarketcap.com"
         self.api_key = os.getenv("CRYPTO_API_KEY")
 
     async def fetch(self, session, relative_url, params=None):
@@ -21,8 +22,6 @@ class CoinMarketAPI:
             content = await self.fetch(session, "/v2/cryptocurrency/quotes/latest", params = params)
             return str(content["data"][ticker][0]["quote"]["USD"]["price"])
     
-
-
 
     async def get_top_coins(self):
         async with aiohttp.ClientSession() as session:

@@ -13,4 +13,3 @@ class TopCryptoService():
         if email:
             print (f'User {username} found with email: {email}')
         print (f'User {username} not found')
-
