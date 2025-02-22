@@ -9,7 +9,6 @@ from presentations.telegram_bot.keyboards import *
 from utils.security.salt import generate_salt
 import asyncio
 from services.crypto_service import CryptoService
-from services.top_crypto_service import TopCryptoService 
 
 class Register(StatesGroup):
     nick = State()
@@ -22,10 +21,14 @@ class Register(StatesGroup):
 
 class CoinPrice(StatesGroup):
     ticker = State()
+
+class ComparingPrice(StatesGroup):
+    ticker = State()
+    
+    
 crypto_service = CryptoService()
 router = Router()
 bot_user_service = UserService()
-top_crypto_sesrvice = TopCryptoService()
 
 
 @router.message(F.text.upper().in_({"ГЛАВНАЯ", "MAIN", "МЕНЮ", "/START"}))
@@ -42,16 +45,31 @@ async def cmd_start(message: Message):
 
     
 
-@router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
-async def check_wallet(message: Message):
-    top_crypto_sesrvice.add_crypto("FIRST FUNC", "STILL 1ST")
-    top_crypto_sesrvice.get_crypto("FIRST FUNC")
+# @router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
+# async def check_wallet(message: Message):
+#     top_crypto_sesrvice.add_crypto("FIRST FUNC", "STILL 1ST")
+#     top_crypto_sesrvice.get_crypto("FIRST FUNC")
+
+@router.message(F.text.upper() == "АРБИТРАЖ ДЛЯ ОДНОЙ ВАЛЮТЫ")
+async def compare_price_specific_crypto_ticker(message: Message, state: FSMContext):
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(state.set_state(CoinPrice.ticker))
+        tg.create_task(await message.answer("Напишите тикер(сокращенное название) нужной вам криптовалюты(например, BTC)"))
+
+
+@router.message(ComparingPrice.ticker)
+async def compare_price_specific_crypto(message: Message, state: FSMContext):
+    async with asyncio.TaskGroup() as tg:
+        crypto = await crypto_service.compare_price_specific_crypto(ticker = message.text)
+        tg.create_task(await message.answer(f"Highest price = {crypto[0][1]}, lowest_price = {crypto[-1][1]}"))
+        tg.create_task(state.clear())
+    
     
 @router.message(F.text.upper() == "ЦЕНА КОНКРЕТНОЙ КРИПТОВАЛЮТЫ")
 async def get_price_specific_crypto_ticker(message: Message, state: FSMContext):
     await state.set_state(CoinPrice.ticker)
     await message.answer("Напишите тикер(сокращенное название) нужной вам криптовалюты(например, BTC)")
-    
+
 
 @router.message(CoinPrice.ticker)
 async def get_price_specific_crypto(message: Message, state: FSMContext):

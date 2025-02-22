@@ -3,11 +3,9 @@ from services.user_service import UserService
 from services.crypto_service import CryptoService
 import asyncio
 
-
 app = fastapi.FastAPI(title = "PetProject")
 
 user_service = UserService()
-
 
 # @app.get("/home")
 # async def home_page():

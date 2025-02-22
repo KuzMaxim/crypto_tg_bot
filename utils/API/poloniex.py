@@ -5,7 +5,7 @@ import os
 load_dotenv()
 
 
-class MobulaAPI:
+class PoloniexAPI:
     def __init__(self):
         self.base_url = "https://futures-api.poloniex.com"
 

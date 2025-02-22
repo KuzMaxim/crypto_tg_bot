@@ -1,5 +1,6 @@
 import aiohttp
 from dotenv import load_dotenv#type: ignore
+import requests
 import asyncio
 import os
 
@@ -30,4 +31,20 @@ class CoinMarketAPI:
                     'convert': 'USD'}
             content = await self.fetch(session, "/v1/cryptocurrency/listings/latest")
             return content["data"]
-
+        
+        
+    def get_top_coins_synch(self):
+        try:
+            response = requests.get(self.base_url + "/v1/cryptocurrency/listings/latest", headers ={"X-CMC_PRO_API_KEY": self.api_key})
+            response.raise_for_status()
+            data = response.json()
+            data_dict = {}
+            
+            for crypto in data["data"]:
+                name = crypto['name']
+                price = crypto['quote']['USD']['price']
+                data_dict[name] = price
+                
+            return data_dict
+        except:
+            print("get_top_coins_synch mistake")
