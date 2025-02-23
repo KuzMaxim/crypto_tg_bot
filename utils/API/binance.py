@@ -12,5 +12,5 @@ class BinanceAPI:
         async with aiohttp.ClientSession() as session:
             params = {"symbol" : ticker + "USDT",
                       }
-            content = await self.fetch(session, "/v2/cryptocurrency/quotes/latest", params = params)
+            content = await self.fetch(session, "/api/v3/ticker/price", params = params)
             return str(content["price"])

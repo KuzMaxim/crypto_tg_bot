@@ -43,6 +43,13 @@ async def cmd_start(message: Message):
 Прости за долгое вступление) Давай же познакомимся!""", reply_markup = start_reply_keyboard
                          )
 
+@router.message(F.text.upper() == "ТОП КРИПТЫ")
+async def give_top_crypto(message: Message):
+    data_dict = await crypto_service.get_top_crypto()
+    answer_str = str()
+    for key in data_dict:
+        answer_str += f"{key} : {data_dict[key]}\n"
+    await message.answer(answer_str)
     
 
 # @router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
@@ -53,7 +60,7 @@ async def cmd_start(message: Message):
 @router.message(F.text.upper() == "АРБИТРАЖ ДЛЯ ОДНОЙ ВАЛЮТЫ")
 async def compare_price_specific_crypto_ticker(message: Message, state: FSMContext):
     async with asyncio.TaskGroup() as tg:
-        tg.create_task(state.set_state(CoinPrice.ticker))
+        tg.create_task(state.set_state(ComparingPrice.ticker))
         tg.create_task(await message.answer("Напишите тикер(сокращенное название) нужной вам криптовалюты(например, BTC)"))
 
 
@@ -61,7 +68,7 @@ async def compare_price_specific_crypto_ticker(message: Message, state: FSMConte
 async def compare_price_specific_crypto(message: Message, state: FSMContext):
     async with asyncio.TaskGroup() as tg:
         crypto = await crypto_service.compare_price_specific_crypto(ticker = message.text)
-        tg.create_task(await message.answer(f"Highest price = {crypto[0][1]}, lowest_price = {crypto[-1][1]}"))
+        tg.create_task(await message.answer(f"Самая выгодная цена = {round(float(crypto[0][1]), 5)}, самая низкая цена = {round(float(crypto[-1][1]), 5)}, потенциальная выгода = {round(float(crypto[0][1]) - float(crypto[-1][1]), 5)}"))
         tg.create_task(state.clear())
     
     
@@ -73,7 +80,8 @@ async def get_price_specific_crypto_ticker(message: Message, state: FSMContext):
 
 @router.message(CoinPrice.ticker)
 async def get_price_specific_crypto(message: Message, state: FSMContext):
-    await message.answer(await crypto_service.get_specific_crypto(ticker = message.text) + "$ (USD)")
+    price = await crypto_service.get_specific_crypto(ticker = message.text)
+    await message.answer(round(float(price["binance"]), 5) + "$ (USD)")
     await state.clear()
     
     

@@ -12,6 +12,7 @@ load_dotenv()
 
 
 async def main():
+    crypto_repository.check_table()
     bot = Bot(token = os.getenv("TG_BOT_TOKEN"))
     dp =  Dispatcher()
     dp.include_router(router)

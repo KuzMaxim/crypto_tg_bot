@@ -18,13 +18,14 @@ class CryptoService:
             self.coin_market = tg.create_task(self.coin_market_api.get_coin(ticker = ticker))
             self.poloniex = tg.create_task(self.poloniex_api.get_coin(ticker = ticker))
             self.binance = tg.create_task(self.binance_api.get_coin(ticker = ticker))
-        return {"coin_market" : self.coin_market, "poloniex" : self.poloniex, "binance" : self.binance}
+        return {"coin_market" : await self.coin_market, "poloniex" : await self.poloniex, "binance" : await self.binance}
     
     async def get_top_crypto(self) -> dict:
         return await self.top_crypto_repository.get_top_crypto()
     
     async def compare_price_specific_crypto(self, ticker : str) -> list:
         raw_data = await self.get_specific_crypto(ticker = ticker)
-        data = list(raw_data.items()).sort(key = lambda x : x[-1], reverse = True)
+        data = list(raw_data.items())
+        data.sort(key = lambda x : x[-1], reverse = True)
         return data
             

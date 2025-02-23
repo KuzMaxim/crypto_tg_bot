@@ -41,7 +41,7 @@ class CryptoRepository:
     
     def check_table(self):
         
-        with open("repositories/db/logs/Redis.txt", "w") as logs:
+        with open("repositories/db/logs/Redis/top_crypto.txt", "w") as logs:
 
             keys = self.repository.keys('*')
 
