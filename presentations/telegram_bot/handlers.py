@@ -52,23 +52,25 @@ async def give_top_crypto(message: Message):
     await message.answer(answer_str)
     
 
-# @router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
-# async def check_wallet(message: Message):
-#     top_crypto_sesrvice.add_crypto("FIRST FUNC", "STILL 1ST")
-#     top_crypto_sesrvice.get_crypto("FIRST FUNC")
+@router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
+async def get_checkpoints(message: Message):
+    print(await bot_user_service.get_checkpoints(tg_id = message.from_user.id))
+
 
 @router.message(F.text.upper() == "АРБИТРАЖ ДЛЯ ОДНОЙ ВАЛЮТЫ")
 async def compare_price_specific_crypto_ticker(message: Message, state: FSMContext):
-    async with asyncio.TaskGroup() as tg:
-        tg.create_task(state.set_state(ComparingPrice.ticker))
-        tg.create_task(await message.answer("Напишите тикер(сокращенное название) нужной вам криптовалюты(например, BTC)"))
-
+    if await bot_user_service.check_active(tg_id= str(message.from_user.id)):
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(state.set_state(ComparingPrice.ticker))
+            tg.create_task(await message.answer("Напишите тикер(сокращенное название) нужной вам криптовалюты(например, BTC)"))
+    else:
+        return await message.answer("Зарегистрируйтесь прежде, чем использовать")
 
 @router.message(ComparingPrice.ticker)
 async def compare_price_specific_crypto(message: Message, state: FSMContext):
     async with asyncio.TaskGroup() as tg:
         crypto = await crypto_service.compare_price_specific_crypto(ticker = message.text)
-        tg.create_task(await message.answer(f"Самая выгодная цена = {round(float(crypto[0][1]), 5)}, самая низкая цена = {round(float(crypto[-1][1]), 5)}, потенциальная выгода = {round(float(crypto[0][1]) - float(crypto[-1][1]), 5)}"))
+        tg.create_task(await message.answer(f"Самая выгодная цена = {round(float(crypto[0][1]), 5)}$ (USD), самая низкая цена = {round(float(crypto[-1][1]), 5)}$ (USD), потенциальная выгода = {round(float(crypto[0][1]) - float(crypto[-1][1]), 5)}$ (USD)"))
         tg.create_task(state.clear())
     
     
@@ -81,7 +83,7 @@ async def get_price_specific_crypto_ticker(message: Message, state: FSMContext):
 @router.message(CoinPrice.ticker)
 async def get_price_specific_crypto(message: Message, state: FSMContext):
     price = await crypto_service.get_specific_crypto(ticker = message.text)
-    await message.answer(round(float(price["binance"]), 5) + "$ (USD)")
+    await message.answer(str(round(float(price["binance"]), 5)) + "$ (USD)")
     await state.clear()
     
     

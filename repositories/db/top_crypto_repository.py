@@ -61,6 +61,6 @@ class CryptoRepository:
             schedule.run_pending()
             time.sleep(50)
 
-crypto_repository = CryptoRepository(host = os.getenv("DB_HOST_REDIS"), port = os.getenv("DB_PORT_REDIS"), db = 0)# username = os.getenv("DB_USER_REDIS"), password = os.getenv("DB_PASS_REDIS"),
+crypto_repository = CryptoRepository(host = os.getenv("DB_HOST_REDIS"), port = os.getenv("DB_PORT_REDIS_CRYPTO"), db = 0)# username = os.getenv("DB_USER_REDIS"), password = os.getenv("DB_PASS_REDIS"),
 
 

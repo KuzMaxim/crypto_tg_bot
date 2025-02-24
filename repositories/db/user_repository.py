@@ -48,5 +48,28 @@ class UserRepository:
         async with self.sessionmaker() as session:
             await session.execute(stmp)
             await session.commit()
+    
+    async def check_active(self, tg_id: str) -> bool:
+        stmp = select(User.active).where(User.tgid == tg_id)
         
+        async with self.sessionmaker() as session:
+            resp = await session.execute(stmp)
+            
+        row = resp.fetchone()
+        if row is None:
+            return None
+        else:
+            return bool(row[0])
+    
+    async def get_checkpoints(self, tg_id: str):
+        stmp = select(User.checkpoint).where(User.tgid == tg_id)
+        
+        async with self.sessionmaker() as session:
+            resp = await session.execute(stmp)
+            
+        row = resp.fetchall()
+        if row is None:
+            return None
+        else:
+            return row
         
