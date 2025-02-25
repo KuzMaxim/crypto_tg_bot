@@ -10,10 +10,9 @@ start_reply_keyboard = ReplyKeyboardMarkup(keyboard = [
 
 
 
-inline_keyboard_auth = InlineKeyboardMarkup(inline_keyboard = [
-    [InlineKeyboardButton(text = "Войти", callback_data = "log_in")],
-    [InlineKeyboardButton(text = "Регистрация", callback_data = "sign_in")],
-    [InlineKeyboardButton(text = "Забыл пароль", callback_data = "new_password"),]
+inline_keyboard_wallet = InlineKeyboardMarkup(inline_keyboard = [
+    [InlineKeyboardButton(text = "Посмотреть кошелек", callback_data = "check_wallet")],
+    [InlineKeyboardButton(text = "Поменять кошелек", callback_data = "change_wallet")],
     ])
 
 

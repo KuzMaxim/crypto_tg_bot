@@ -1,7 +1,9 @@
 from infrastructure.sql.connect import create_connection, create_tables
-from persistent.db.users import User
+from persistent.db.users import User, Checkpoint
 from sqlalchemy import select, insert, update
-
+from datetime import datetime
+from sqlalchemy.dialects.postgresql import INTEGER
+import asyncio
 
 class UserRepository:
     def __init__(self):
@@ -10,10 +12,17 @@ class UserRepository:
     
     async def put_user(self, tgid:str, nick:str, email:str, uniq_salt:str) -> None:
 
+        time = str(datetime.now())
         stmp = insert(User).values({"tgid":tgid, "email":email, "nick":nick, "active": "True", "salt":uniq_salt})
+        stmp2 = insert(Checkpoint).values({"user_id":tgid, "created_at":time})
+        
         
         async with self.sessionmaker() as session:
-            await session.execute(stmp)
+            async with asyncio.TaskGroup() as tg:
+                await session.execute(stmp)
+                await session.execute(stmp2)
+                
+            
             await session.commit()
     
     async def get_user(self, tg_id: str):
@@ -62,7 +71,7 @@ class UserRepository:
             return bool(row[0])
     
     async def get_checkpoints(self, tg_id: str):
-        stmp = select(User.checkpoint).where(User.tgid == tg_id)
+        stmp = select(Checkpoint).join(User).where(User.tgid == str(tg_id))
         
         async with self.sessionmaker() as session:
             resp = await session.execute(stmp)
@@ -71,5 +80,5 @@ class UserRepository:
         if row is None:
             return None
         else:
-            return row
+            return row[0][0].created_at
         

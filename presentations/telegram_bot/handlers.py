@@ -43,6 +43,8 @@ async def cmd_start(message: Message):
 Прости за долгое вступление) Давай же познакомимся!""", reply_markup = start_reply_keyboard
                          )
 
+
+
 @router.message(F.text.upper() == "ТОП КРИПТЫ")
 async def give_top_crypto(message: Message):
     data_dict = await crypto_service.get_top_crypto()
@@ -55,6 +57,19 @@ async def give_top_crypto(message: Message):
 @router.message(F.text.upper() == "МОЙ КОШЕЛЕК")
 async def get_checkpoints(message: Message):
     print(await bot_user_service.get_checkpoints(tg_id = message.from_user.id))
+    await message.answer("Выберите нужную. опцию", reply_markup = inline_keyboard_wallet)
+    
+
+@router.callback_query(F.data == "check_wallet")
+async def check_wallet(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer("Wallet checked")
+
+
+@router.callback_query(F.data == "change_wallet")
+async def change_wallet(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.answer("Wallet changed")
 
 
 @router.message(F.text.upper() == "АРБИТРАЖ ДЛЯ ОДНОЙ ВАЛЮТЫ")

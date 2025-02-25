@@ -8,7 +8,5 @@ class Checkpoint(Base):
     __tablename__ = "checkpoints"
     uuid = Column(TEXT, default = uuid4_as_str(), primary_key = True)
     user_id = Column(TEXT, ForeignKey("users.tgid", ondelete="CASCADE"), nullable=False)
-    created_at = Column(TIME)
-    session_count = Column(INTEGER, default = 0)
-    number = Column(INTEGER, default = 0)
+    created_at = Column(TEXT)
     user = relationship("User", back_populates="checkpoint")

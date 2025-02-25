@@ -5,7 +5,7 @@ from infrastructure.sql.connect import settings
 from dotenv import load_dotenv#type:ignore
 
 from persistent.db.users import User
-from persistent.db.checkpoint import Session
+from persistent.db.checkpoint import Checkpoint
 
 from persistent.db.base import Base
 
