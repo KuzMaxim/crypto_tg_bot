@@ -21,5 +21,8 @@ class UserService:
     async def check_active(self, tg_id: str) -> bool:
         return await self.user_repository.check_active(tg_id = tg_id)
     
-    async def get_checkpoints(self, tg_id: str):
+    async def get_checkpoints(self, tg_id: str) -> dict:
         return await self.user_repository.get_checkpoints(tg_id = tg_id)
+    
+    async def change_wallet(self, tg_id: str, data: dict) -> None:
+        return await self.user_repository.change_wallet(tg_id = tg_id, data = data)

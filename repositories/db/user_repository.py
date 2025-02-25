@@ -82,3 +82,9 @@ class UserRepository:
         else:
             return row[0][0].created_at
         
+    async def change_wallet(self, tg_id: str, data: dict):
+        stmp = update(Checkpoint).where(Checkpoint.user_id == str(tg_id).as_scalar()).values(wallet = data) 
+        
+        async with self.sessionmaker() as session:
+            await session.execute(stmp)
+            await session.commit()

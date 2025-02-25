@@ -24,7 +24,9 @@ class CoinPrice(StatesGroup):
 
 class ComparingPrice(StatesGroup):
     ticker = State()
-    
+
+class ChangeWallet(StatesGroup):
+    wallet = State()
     
 crypto_service = CryptoService()
 router = Router()
@@ -64,13 +66,32 @@ async def get_checkpoints(message: Message):
 async def check_wallet(callback: CallbackQuery):
     await callback.answer()
     await callback.message.answer("Wallet checked")
+    
 
 
 @router.callback_query(F.data == "change_wallet")
-async def change_wallet(callback: CallbackQuery):
+async def change_wallet(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
-    await callback.message.answer("Wallet changed")
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(state.set_state(ChangeWallet.wallet))
+        tg.create_task(await callback.message.answer("""Введите новый кошелек,формат ввода данных:
+BTC:1
+ETH:10"""))
 
+
+@router.message(ChangeWallet.wallet)
+async def change_wallet_data(message: Message, state: FSMContext):
+    
+    data = message.text
+    data_dict = {}
+    for string in data.split("\n"):
+          string = string.split(":")
+          data_dict[string[0]] = string[1]
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(bot_user_service.change_wallet(tg_id = message.from_user.id, data = data_dict))
+        tg.create_task(await message.answer("Кошелек был успешно изменен"))
+        tg.create_task(state.clear())
+    
 
 @router.message(F.text.upper() == "АРБИТРАЖ ДЛЯ ОДНОЙ ВАЛЮТЫ")
 async def compare_price_specific_crypto_ticker(message: Message, state: FSMContext):

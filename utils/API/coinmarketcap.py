@@ -21,6 +21,7 @@ class CoinMarketAPI:
             params = {"symbol" : ticker,
                       "convert" : "USD"}
             content = await self.fetch(session, "/v2/cryptocurrency/quotes/latest", params = params)
+            print(content)
             return str(content["data"][ticker][0]["quote"]["USD"]["price"])
     
 
