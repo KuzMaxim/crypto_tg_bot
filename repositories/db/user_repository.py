@@ -77,10 +77,11 @@ class UserRepository:
             resp = await session.execute(stmp)
             
         row = resp.fetchall()
-        if row is None:
-            return None
-        else:
+        if row:
+            print(row[0][0], "ERROR")
             return row[0][0].created_at
+        else:
+           return None
         
     async def change_wallet(self, tg_id: str, data: dict):
         stmp = update(Checkpoint).where(Checkpoint.user_id == str(tg_id).as_scalar()).values(wallet = data) 
