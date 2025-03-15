@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 class CoinMarketAPI:
-    def __init__(self):
+    def __init__(self) -> dict:
         self.base_url = "https://pro-api.coinmarketcap.com"
         self.api_key = os.getenv("CRYPTO_API_KEY")
 
@@ -16,16 +16,15 @@ class CoinMarketAPI:
         async with session.get(self.base_url + relative_url, headers=headers, params=params) as response:
             return await response.json()
 
-    async def get_coin(self, ticker: str):
+    async def get_coin(self, ticker: str) -> str:
         async with aiohttp.ClientSession() as session:
-            params = {"symbol" : ticker,
+            params = {"symbol" : ticker.upper(),
                       "convert" : "USD"}
             content = await self.fetch(session, "/v2/cryptocurrency/quotes/latest", params = params)
-            print(content)
-            return str(content["data"][ticker][0]["quote"]["USD"]["price"])
+            return str(content["data"][ticker.upper()][0]["quote"]["USD"]["price"])
     
 
-    async def get_top_coins(self):
+    async def get_top_coins(self) -> list:
         async with aiohttp.ClientSession() as session:
             params = {'start': '1',
                     'limit': '100',
@@ -34,7 +33,7 @@ class CoinMarketAPI:
             return content["data"]
         
         
-    def get_top_coins_synch(self):
+    def get_top_coins_synch(self) -> dict:
         try:
             response = requests.get(self.base_url + "/v1/cryptocurrency/listings/latest", headers ={"X-CMC_PRO_API_KEY": self.api_key})
             response.raise_for_status()
@@ -48,4 +47,4 @@ class CoinMarketAPI:
                 
             return data_dict
         except:
-            print("get_top_coins_synch mistake")
+            raise Exception

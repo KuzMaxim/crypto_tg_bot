@@ -4,7 +4,6 @@ from email.mime.text import MIMEText
 from random import randrange
 from dotenv import load_dotenv#type: ignore
 import urllib.parse
-from ..security.hash import create_hash_pswd
 
 load_dotenv()
 
@@ -30,6 +29,6 @@ async def send_email(getter, salt):
 
         return message
     except Exception as ex:
-        return f"Message was not sent"
+        raise Exception("Message was not sent")
     finally:
         server.quit()

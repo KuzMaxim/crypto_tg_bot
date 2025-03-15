@@ -10,7 +10,7 @@ class BinanceAPI:
 
     async def get_coin(self, ticker: str) -> str:#gives back price in USDT
         async with aiohttp.ClientSession() as session:
-            params = {"symbol" : ticker + "USDT",
+            params = {"symbol" : ticker.upper() + "USDT",
                       }
             content = await self.fetch(session, "/api/v3/ticker/price", params = params)
             return str(content["price"])

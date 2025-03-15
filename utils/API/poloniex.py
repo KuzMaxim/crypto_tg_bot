@@ -18,4 +18,7 @@ class PoloniexAPI:
         async with aiohttp.ClientSession() as session:
             params = ticker.upper()
             content = await self.fetch(session, f"/api/v1/contracts/{params}USDTPERP")
-            return str(content["data"]["lastTradePrice"])
+            if content["code"] == '200000':
+                return str(content["data"]["lastTradePrice"])
+            else:
+                raise KeyError
